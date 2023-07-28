@@ -1,0 +1,43 @@
+version: "3.8"
+
+services:
+
+  postgres:
+    image: postgres:latest
+    mem_limit: 700m
+
+    networks:
+     - stc
+    environment:
+     POSTGRES_USER: postgres
+     POSTGRES_PASSWORD: Ll@123456!
+     POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    
+  stc:
+    image: stc/stc:latest
+    mem_limit: 700m
+    ports:
+      - "7070:7070"
+    networks:
+     - stc
+    depends_on:
+      - postgres
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 15s
+        max_attempts: 3
+        window: 120s
+    environment:
+     SPRING_DATASOURCE_URL: jdbc:postgresql://host.docker.internal:5432/postgres
+     SPRING_DATASOURCE_USERNAME: postgres
+     SPRING_DATASOURCE_PASSWORD: Ll@123456!
+volumes:
+  postgres-data:
+      
+networks:
+  stc:
