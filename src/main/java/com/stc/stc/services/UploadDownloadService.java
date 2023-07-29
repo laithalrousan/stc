@@ -3,7 +3,6 @@ package com.stc.stc.services;
 import com.stc.stc.entities.Files;
 import com.stc.stc.entities.Item;
 import com.stc.stc.entities.Permission;
-import com.stc.stc.models.FileModel;
 import com.stc.stc.models.ItemModel;
 import com.stc.stc.repository.FileRepository;
 import com.stc.stc.repository.PermissionRepository;
@@ -13,7 +12,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 @Service
 public class UploadDownloadService {
@@ -54,6 +55,13 @@ public class UploadDownloadService {
         return (savedItem);
 
 
+    }
+    public Files getFile(int id) {
+        return fileRepository.findById(id).get();
+    }
+
+    public Stream<Files> getAllFiles() {
+        return fileRepository.findAll().stream();
     }
 
     public boolean checkPermission(ItemModel item, int level) {

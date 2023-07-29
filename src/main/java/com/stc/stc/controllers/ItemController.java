@@ -3,20 +3,25 @@ package com.stc.stc.controllers;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.stc.stc.entities.Files;
 import com.stc.stc.entities.Item;
+import com.stc.stc.entities.ResponseFile;
 import com.stc.stc.exceptions.HttpClientErrorException;
 import com.stc.stc.exceptions.UnauthorizedException;
 import com.stc.stc.models.ItemModel;
 import com.stc.stc.services.UploadDownloadService;
 import com.stc.stc.utils.PermissionLevel;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 public class ItemController {
@@ -57,6 +62,29 @@ public class ItemController {
         return new ResponseEntity<Item>(item.getItem(), HttpStatus.CREATED);
     }
 
+    @GetMapping("/files/{id}")
+    public ResponseEntity<byte[]> getFile(@PathVariable int id) {
+        Files fileDB = uploadDownloadService.getFile(id);
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileDB.getItem().getName() + "\"")
+                .body(fileDB.getData());
+    }
+    @GetMapping("/files")
+    public ResponseEntity<List<ResponseFile>> getListFiles() {
+        List<ResponseFile> files = uploadDownloadService.getAllFiles().map(dbFile -> {
+            String fileDownloadUri = ServletUriComponentsBuilder
+                    .fromCurrentContextPath()
+                    .path("/files/")
+                    .path(dbFile.getId().toString())
+                    .toUriString();
+
+            return new ResponseFile(
+                    fileDownloadUri);
+        }).collect(Collectors.toList());
+
+        return new ResponseEntity<List<ResponseFile>>(files, HttpStatus.CREATED);
+    }
     protected boolean isAuthorized(ItemModel item, PermissionLevel level) {
 
         return uploadDownloadService.checkPermission(item, level.getValue());
